@@ -1,16 +1,23 @@
-PATH_DATA = "../data/";
-
-
+% Clear figures and workspace variables
 close all
 clear
 
-% Load data
-csv_data = readtable('dados.csv');
+% Constants
+DIRECTORY_DATA = "../data/";
+EXTENSION_FEATURES = ".csv";
+PATH_FEATURES = DIRECTORY_DATA + "features" + EXTENSION_FEATURES;
+FRACTION_DEVELOPMENT = 0.8;
+FRACTION_TESTING = 0.2;
+FRACTION_TRAINING = 0.8;
+FRACTION_VALIDATION = 0.2;
 
+
+% Load data
+csv_data = readtable(PATH_FEATURES);
 col_names = csv_data.Properties.VariableNames;
 
 % Define a cell array of the target labels
-target_labels = {'blues', 'classical', 'country', 'disco', 'hiphop', 'jazz', 'metal', 'pop', 'reggae', 'rock'};
+target_labels = table2cell(unique(csv_data(:, end)));
 
 % Use the ismember function to convert the target labels to numerical format
 target_num = zeros(size(csv_data, 1), 1);
@@ -23,10 +30,7 @@ csv_data.label = target_num;
 
 data_full = table2array(csv_data(:, 2:end));
 
-ix=randperm(size(data_full,1)); %randomize index
+[train_data, val_data, test_data] = divide_data(data_full, FRACTION_TRAINING, ...
+    FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing
 
-ixdataset=ix(1:floor(800)); %dataset index
-ixvalidation=ix(floor(800)+1:end); %validationset index
 
-ixtraining=ixdataset(1:floor(650)); %training index
-ixtesting=ixdataset(floor(650)+1:end); %testing index

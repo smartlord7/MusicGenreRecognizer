@@ -10,7 +10,7 @@ FRACTION_DEVELOPMENT = 0.8;
 FRACTION_TESTING = 0.2;
 FRACTION_TRAINING = 0.8;
 FRACTION_VALIDATION = 0.2;
-
+FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
 
 % Load data
 csv_data = readtable(PATH_FEATURES);
@@ -28,9 +28,11 @@ end
 % Replace the 'target' column in the table with the numerical values
 csv_data.label = target_num;
 
-data_full = table2array(csv_data(:, 2:end));
+features = table2array(csv_data(:, 2:end));
+[features_h, features_idx] = rank_kruskal_wallis(features);
 
 [train_data, val_data, test_data] = divide_data(data_full, FRACTION_TRAINING, ...
     FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing
+
 
 

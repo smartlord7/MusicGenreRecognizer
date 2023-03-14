@@ -15,7 +15,7 @@ N_TOP_RANKED_FEATURES = 20;
 
 % Load data
 csv_data = readtable(PATH_FEATURES);
-col_names = csv_data.Properties.VariableNames(2:end - 1);
+col_names = csv_data.Properties.VariableNames;
 
 % Define a cell array of the target labels
 target_labels = table2cell(unique(csv_data(:, end)));
@@ -30,14 +30,7 @@ features = table2array(csv_data(:, 2:end - 1));
 features = to_data_struct(features, target_num);
 [features_h, features_idx] = rank_kruskal_wallis(features);
 
-top_n_features_h = features_h(1:N_TOP_RANKED_FEATURES + 1);
-fprintf("-------Top %d KW ranked features-------\n", N_TOP_RANKED_FEATURES)
-for i=(1:N_TOP_RANKED_FEATURES)
-    fprintf("%d - %s - H = %.3f\n", i, col_names{features_idx(i)}, features_h(i));
-end
-
-figure;
-plot( (1:features.dim), features_h);
+fprintf("Top %")
 
 %[train_data, val_data, test_data] = divide_data(features, FRACTION_TRAINING, ...
 %    FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing

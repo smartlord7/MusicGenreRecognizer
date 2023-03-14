@@ -4,6 +4,9 @@ function [features_h, features_idx] = rank_kruskal_wallis(data)
     for i=(1:dim)
         [~, table, ~] = kruskalwallis(data.X(i, :), data.y, 'off');
         h = table{2, 5};
+        if isnan(h)
+            h = 0;
+        end
         hAll(i) = h;
     end
     

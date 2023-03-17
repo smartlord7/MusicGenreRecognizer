@@ -13,8 +13,9 @@ FRACTION_TESTING = 0.2;
 FRACTION_TRAINING = 0.8;
 FRACTION_VALIDATION = 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
-N_TOP_DISCRIMINANT_RANKED_FEATURES = 30;
-N_PROJECTION_FEATURES = 10;
+N_PROJECTION_FEATURES = 25;
+N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 10;
+N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 3;
 
 % Load data
 fprintf("Loading dataset...\n");
@@ -35,50 +36,21 @@ for i = 1:numel(target_labels)
     target_num(ismember(csv_data.label, target_labels{i})) = i;
 end
 
-% Kruscal Wallis
 features = table2array(csv_data(:, 2:end - 1));
 features = to_data_struct(features, target_num);
-[features_h, features_idx] = rank_kruskal_wallis(features);
-
-top_n_features_h = features_h(1:N_TOP_DISCRIMINANT_RANKED_FEATURES);
-top_n_features_idx = features_idx(1:N_TOP_DISCRIMINANT_RANKED_FEATURES);
-
-fprintf("Applying Kruskal-Wallis test...\n");
-fprintf("-------Top %d KW ranked features-------\n", N_TOP_DISCRIMINANT_RANKED_FEATURES)
-for i=(1:N_TOP_DISCRIMINANT_RANKED_FEATURES)
-    fprintf("%d - %s - H = %.3f\n", i, col_names{features_idx(i)}, features_h(i));
-end
-
-features.X = features.X(top_n_features_idx, :); % Update the features to the ones most relevant
-col_names = col_names(top_n_features_idx);
-%test_norm(features, col_names);
-
-figure;
-scatter((1:features.dim), features_h);
-
-% End of Kruscal Wallis
-
-% Correlation study
-
-fprintf("Calculating %d top KW features correlation matrix...\n", N_TOP_DISCRIMINANT_RANKED_FEATURES);
-corr_matrix = corrcoef(features.X'); % Only 20 best
-figure;
-heatmap(col_names, col_names, corr_matrix);
-file_path = PATH_PLOT_IMAGES + "corr_matrix_kw" + EXTENSION_IMG;
-save_img(file_path);
-
-% End of correlation study
 
 % PCA
 
 for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     norm_function = FUNCTIONS_NORMALIZATION(i);
     fprintf("Normalizing using '%s'...\n", norm_function);
+    features_ = features;
+    col_names_ = col_names;
 
-    features.X = normalize(features.X, norm_function);
-    x = features.X;
+    features_.X = normalize(features_.X, norm_function);
+    x = features_.X;
     fprintf("Applying PCA for %d dimensions...\n", N_PROJECTION_FEATURES);
-    [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features, N_PROJECTION_FEATURES);
+    [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features_, N_PROJECTION_FEATURES);
     
     figure;
     plot(eigenValues, 'o-.');
@@ -106,8 +78,68 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 
     figure;
     ppatterns(proj);
+    file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
+    save_img(file_path);
 
+    % Kruskal Wallis
+
+    [features_h, features_idx] = rank_kruskal_wallis(features_);
+    top_features = features_h(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
+    top_features_idx = features_idx(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
+    
+    fprintf("Applying Kruskal-Wallis test...\n");
+    fprintf("-------Top %d KW ranked features-------\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
+
+    for j=(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES)
+        fprintf("%d - %s - H = %.3f\n", j, col_names_{features_idx(j)}, features_h(j));
+    end
+    
+    features_.X = features_.X(top_features_idx, :); % Update the features to the ones most relevant
+    col_names_ = col_names_(top_features_idx);
+    %test_norm(features_, col_names_);
+    
+    figure;
+    scatter((1:features_.dim), features_h);
+    file_path = PATH_PLOT_IMAGES + "scatter_h_kw" + EXTENSION_IMG;
+    save_img(file_path);
+
+    figure;
+    ppatterns(proj);
+    file_path = PATH_PLOT_IMAGES + "patterns_pca_kw" + EXTENSION_IMG;
+    save_img(file_path);
+
+    
+    % End of Kruscal Wallis
+    
+    % Correlation study
+    
+    fprintf("Calculating %d top KW features correlation matrix...\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
+    corr_matrix = corrcoef(features_.X'); % Only 20 best
+    figure;
+    heatmap(col_names_, col_names_, corr_matrix);
+    file_path = PATH_PLOT_IMAGES + "corr_matrix_kw" + EXTENSION_IMG;
+    save_img(file_path);
+    
     % End of correlation study
+    
+    % RandomForest
+    
+    importances = rank_rf_importance(features_);
+    [importances, idx] = sort(importances, "descend");
+    idx = idx(1:N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);
+    features_.X = features_.X(:, idx);
+
+    fprintf("Applying Random Forest test...\n");
+    fprintf("-------Top %d RF ranked features by importance-------\n", N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);
+
+    for j=(1:N_TOP_DISCRIMINANT_RF_RANKED_FEATURES)
+        fprintf("%d - %s - I = %.3f\n", j, col_names_{idx(j)}, importances(j));
+    end
+    
+    file_path = PATH_PLOT_IMAGES + "importance_rf" + EXTENSION_IMG;
+    save_img(file_path);
+    
+    % End of RandomForest
 end
 
 % End of PCA

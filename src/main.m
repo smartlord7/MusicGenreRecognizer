@@ -14,8 +14,8 @@ FRACTION_TRAINING = 0.8;
 FRACTION_VALIDATION = 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
 N_PROJECTION_FEATURES = 25;
-N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 10;
-N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 3;
+N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 15;
+N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 8;
 
 % Load data
 fprintf("Loading dataset...\n");
@@ -51,33 +51,35 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     x = features_.X;
     fprintf("Applying PCA for %d dimensions...\n", N_PROJECTION_FEATURES);
     [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features_, N_PROJECTION_FEATURES);
-    
+    features_.X = proj.X;
+    features_.dim = size(proj.X, 1);
+
     figure;
     plot(eigenValues, 'o-.');
     xlabel('Principal component');
     ylabel('Eigen value');
-    file_path = PATH_PLOT_IMAGES + "pca_eigen_values" + norm_function + EXTENSION_IMG;
-    %save_img(file_path);
+    file_path = PATH_PLOT_IMAGES + "pca_eigen_values_" + norm_function + EXTENSION_IMG;
+    save_img(file_path);
     
     figure;
     plot(individual_variance, 'o-');
     xlabel('Principal component');
     ylabel('% of variance');
-    file_path = PATH_PLOT_IMAGES + "pca_variance" + norm_function + EXTENSION_IMG;
-    %save_img(file_path);
+    file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
+    save_img(file_path);
 
     % Correlation study
     
     fprintf("Calculating %d PCA features correlation matrix...\n", N_PROJECTION_FEATURES);
-    corr_matrix = corrcoef(proj.X'); % Only the ones most important in PCA analysis
+    corr_matrix = corrcoef(features_.X'); % Only the ones most important in PCA analysis
     
     figure;
     heatmap((1:N_PROJECTION_FEATURES), (1:N_PROJECTION_FEATURES), corr_matrix);
-    file_path = PATH_PLOT_IMAGES + "corr_matrix_pca" + norm_function + EXTENSION_IMG;
-    %save_img(file_path);
+    file_path = PATH_PLOT_IMAGES + "corr_matrix_pca_" + norm_function + EXTENSION_IMG;
+    save_img(file_path);
 
     figure;
-    ppatterns(proj);
+    ppatterns(features_);
     file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
     %save_img(file_path);
 
@@ -96,15 +98,16 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     
     features_.X = features_.X(top_features_idx, :); % Update the features to the ones most relevant
     col_names_ = col_names_(top_features_idx);
+    features_.dim = size(features_.X, 1);
     %test_norm(features_, col_names_);
     
     figure;
-    scatter((1:features_.dim), features_h);
+    scatter((1:size(features_h, 2)), features_h);
     file_path = PATH_PLOT_IMAGES + "scatter_h_kw" + EXTENSION_IMG;
     save_img(file_path);
 
     figure;
-    ppatterns(proj);
+    ppatterns(features_);
     file_path = PATH_PLOT_IMAGES + "patterns_pca_kw" + EXTENSION_IMG;
     %save_img(file_path);
 
@@ -127,7 +130,8 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     importances = rank_rf_importance(features_);
     [importances, idx] = sort(importances, "descend");
     idx = idx(1:N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);
-    features_.X = features_.X(:, idx);
+    features_.X = features_.X(idx, :);
+    features_.dim = size(features_.X, 1);
 
     fprintf("Applying Random Forest test...\n");
     fprintf("-------Top %d RF ranked features by importance-------\n", N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);

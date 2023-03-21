@@ -54,6 +54,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features_, N_PROJECTION_FEATURES);
     features_.X = proj.X;
     features_.dim = size(proj.X, 1);
+    
 
 %     figure;
 %     plot(eigenValues, 'o-.');
@@ -148,27 +149,32 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 
     % Minimum distance classifier
 
-    data_mdc = features_; % Eu pensei que isto era a data struct de features reduzidas, mas tá 10x3? não é muito pouco?
+
+    data_mdc = features_; 
+    [train_data, val_data, test_data] = divide_data(features_, FRACTION_TRAINING, ...
+   FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing
+ 
 
     for j=(1:size(target_labels))
+        train_data_ = train_data;
+        val_data_ = val_data;
+
         choice_class = j - 1;
         genre = target_labels{j};
         fprintf("Binary classification for genre: '%s'\n", genre);
         
         % Binarize target labels: 1 for the chosen class and 0 for the
         % remaining
-        class_idx = find(data_mdc.y == choice_class);
-        non_class_idx = find(data_mdc.y ~= choice_class);
-        data_mdc.y(class_idx) = 1;
-        data_mdc.y(non_class_idx) = 0;
+        train_data_ = to_bin_classification(train_data_, choice_class);
+        val_data_ = to_bin_classification(val_data_, choice_class);
 
         for k=(1:size(FUNCTIONS_DISTANCES, 2))
             dist_func = FUNCTIONS_DISTANCES(k);
 
             % Run the Minimum Distance Classifier
-            predicted = min_dist_classifier(data_mdc, dist_func);
+            predicted = min_dist_classifier(train_data_, val_data_, dist_func);
             file_path = PATH_PLOT_IMAGES + "cm_" + genre + "_" + norm_function + "_" + dist_func + EXTENSION_IMG;
-            [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(data_mdc.y, predicted, file_path);
+            [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(val_data_.y, predicted, file_path);
             fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
                 "Specificity: %.3f\n" + ...
@@ -183,9 +189,6 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 end
 
 % End of PCA
-
-%[train_data, val_data, test_data] = divide_data(features, FRACTION_TRAINING, ...
-%    FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing
 
 % End of Minimum distance classifier
 

@@ -13,9 +13,10 @@ FRACTION_TESTING = 0.2;
 FRACTION_TRAINING = 0.8;
 FRACTION_VALIDATION = 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
+FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
 N_PROJECTION_FEATURES = 25;
 N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 15;
-N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 8;
+N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 10;
 
 % Load data
 fprintf("Loading dataset...\n");
@@ -33,7 +34,7 @@ target_labels = table2cell(unique(csv_data(:, end))); % Discard first column (fi
 % Use the ismember function to convert the target labels to numerical format
 target_num = zeros(size(csv_data, 1), 1);
 for i = 1:numel(target_labels)
-    target_num(ismember(csv_data.label, target_labels{i})) = i;
+    target_num(ismember(csv_data.label, target_labels{i})) = i - 1;
 end
 
 features = table2array(csv_data(:, 2:end - 1));
@@ -54,34 +55,34 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     features_.X = proj.X;
     features_.dim = size(proj.X, 1);
 
-    figure;
-    plot(eigenValues, 'o-.');
-    xlabel('Principal component');
-    ylabel('Eigen value');
-    file_path = PATH_PLOT_IMAGES + "pca_eigen_values_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
+%     figure;
+%     plot(eigenValues, 'o-.');
+%     xlabel('Principal component');
+%     ylabel('Eigen value');
+%     file_path = PATH_PLOT_IMAGES + "pca_eigen_values_" + norm_function + EXTENSION_IMG;
+%     save_img(file_path);
     
-    figure;
-    plot(individual_variance, 'o-');
-    xlabel('Principal component');
-    ylabel('% of variance');
-    file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
+%     figure;
+%     plot(individual_variance, 'o-');
+%     xlabel('Principal component');
+%     ylabel('% of variance');
+%     file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
+%     save_img(file_path);
 
     % Correlation study
     
     fprintf("Calculating %d PCA features correlation matrix...\n", N_PROJECTION_FEATURES);
     corr_matrix = corrcoef(features_.X'); % Only the ones most important in PCA analysis
     
-    figure;
-    heatmap((1:N_PROJECTION_FEATURES), (1:N_PROJECTION_FEATURES), corr_matrix);
-    file_path = PATH_PLOT_IMAGES + "corr_matrix_pca_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
+%     figure;
+%     heatmap((1:N_PROJECTION_FEATURES), (1:N_PROJECTION_FEATURES), corr_matrix);
+%     file_path = PATH_PLOT_IMAGES + "corr_matrix_pca_" + norm_function + EXTENSION_IMG;
+%     save_img(file_path);
 
-    figure;
-    ppatterns(features_);
-    file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
-    %save_img(file_path);
+%     figure;
+%     ppatterns(features_);
+%     file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
+%     save_img(file_path);
 
     % Kruskal Wallis
 
@@ -99,17 +100,17 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     features_.X = features_.X(top_features_idx, :); % Update the features to the ones most relevant
     col_names_ = col_names_(top_features_idx);
     features_.dim = size(features_.X, 1);
-    %test_norm(features_, col_names_);
+%     test_norm(features_, col_names_);
     
-    figure;
-    scatter((1:size(features_h, 2)), features_h);
-    file_path = PATH_PLOT_IMAGES + "scatter_h_kw" + EXTENSION_IMG;
-    save_img(file_path);
+%     figure;
+%     scatter((1:size(features_h, 2)), features_h);
+%     file_path = PATH_PLOT_IMAGES + "scatter_h_kw" + EXTENSION_IMG;
+%     save_img(file_path);
 
-    figure;
-    ppatterns(features_);
-    file_path = PATH_PLOT_IMAGES + "patterns_pca_kw" + EXTENSION_IMG;
-    %save_img(file_path);
+%     figure;
+%     ppatterns(features_);
+%     file_path = PATH_PLOT_IMAGES + "patterns_pca_kw" + EXTENSION_IMG;
+%     save_img(file_path);
 
     
     % End of Kruscal Wallis
@@ -118,10 +119,10 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     
     fprintf("Calculating %d top KW features correlation matrix...\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
     corr_matrix = corrcoef(features_.X'); % Only 20 best
-    figure;
-    heatmap(col_names_, col_names_, corr_matrix);
-    file_path = PATH_PLOT_IMAGES + "corr_matrix_kw" + EXTENSION_IMG;
-    %save_img(file_path);
+%     figure;
+%     heatmap(col_names_, col_names_, corr_matrix);
+%     file_path = PATH_PLOT_IMAGES + "corr_matrix_kw" + EXTENSION_IMG;
+%     save_img(file_path);
     
     % End of correlation study
     
@@ -140,40 +141,51 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
         fprintf("%d - %s - I = %.3f\n", j, col_names_{idx(j)}, importances(j));
     end
     
-    file_path = PATH_PLOT_IMAGES + "importance_rf" + EXTENSION_IMG;
-    %save_img(file_path);
+%     file_path = PATH_PLOT_IMAGES + "importance_rf" + EXTENSION_IMG;
+%     save_img(file_path);
     
     % End of RandomForest
+
+    % Minimum distance classifier
+
+    data_mdc = features_; % Eu pensei que isto era a data struct de features reduzidas, mas tá 10x3? não é muito pouco?
+
+    for j=(1:size(target_labels))
+        choice_class = j - 1;
+        genre = target_labels{j};
+        fprintf("Binary classification for genre: '%s'\n", genre);
+        
+        % Binarize target labels: 1 for the chosen class and 0 for the
+        % remaining
+        class_idx = find(data_mdc.y == choice_class);
+        non_class_idx = find(data_mdc.y ~= choice_class);
+        data_mdc.y(class_idx) = 1;
+        data_mdc.y(non_class_idx) = 0;
+
+        for k=(1:size(FUNCTIONS_DISTANCES, 2))
+            dist_func = FUNCTIONS_DISTANCES(k);
+
+            % Run the Minimum Distance Classifier
+            predicted = min_dist_classifier(data_mdc, dist_func);
+            file_path = PATH_PLOT_IMAGES + "cm_" + genre + "_" + norm_function + "_" + dist_func + EXTENSION_IMG;
+            [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(data_mdc.y, predicted, file_path);
+            fprintf("MSE: %.3f\n" + ...
+                "Accuracy: %.3f\n" + ...
+                "Specificity: %.3f\n" + ...
+                "Sensitivity: %.3f\n" + ...
+                "F-measure: %.3f\n", mse, accuracy, specificity, sensitivity, f_measure);
+            
+        end
+
+        % Reset labels
+        data_mdc.y = features_.y;
+    end
 end
 
 % End of PCA
 
 %[train_data, val_data, test_data] = divide_data(features, FRACTION_TRAINING, ...
 %    FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing
-
-% Minimum distance classifier
-
-data_mdc = features_; % Eu pensei que isto era a data struct de features reduzidas, mas tá 10x3? não é muito pouco?
-
-for i=(1:size(data_mdc.y))
-    
-    choice_class = i;
-    
-    % First, set all entries in the y field to 1
-    data_mdc.y = ones(size(data_mdc.y));
-    
-    % Then, set the entries corresponding to the choice class to 0
-    data_mdc.y(data_mdc.y == choice_class) = 0;
-    
-    % Run the Minimum Distance Classifier
-    [accuracy, errors] = mdc_euclidean(data_mdc);
-
-    fprintf("Accuracy for class %d: %f\n", i, accuracy);
-    
-    % Reset labels
-    data_mdc.y = features_.y;
-
-end
 
 % End of Minimum distance classifier
 

@@ -13,8 +13,8 @@ PATH_PLOT_IMAGES = "../img/plots/";
 PATH_FEATURES = DIRECTORY_DATA + "features" + EXTENSION_FEATURES;
 FRACTION_DEVELOPMENT = 0.8;
 FRACTION_TESTING = 0.2;
-FRACTION_TRAINING = 0.8;
-FRACTION_VALIDATION = 0.2;
+FRACTION_TRAINING = FRACTION_DEVELOPMENT * 0.8;
+FRACTION_VALIDATION = FRACTION_DEVELOPMENT * 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
 FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
 N_PROJECTION_FEATURES = 25;
@@ -102,11 +102,10 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     fprintf("-------Top %d KW ranked features-------\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
 
     for j=(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES)
-        fprintf("%d - %s - H = %.3f\n", j, col_names_{features_idx(j)}, features_h(j));
+        fprintf("%d - %d - H = %.3f\n", j, features_idx(j), features_h(j));
     end
     
     features_.X = features_.X(top_features_idx, :); % Update the features to the ones most relevant
-    col_names_ = col_names_(top_features_idx);
     features_.dim = size(features_.X, 1);
 %     test_norm(features_, col_names_);
     
@@ -128,7 +127,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     fprintf("Calculating %d top KW features correlation matrix...\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
     corr_matrix = corrcoef(features_.X'); % Only 20 best
     figure;
-    heatmap(col_names_, col_names_, corr_matrix);
+    heatmap((1:features_.dim), (1:features_.dim), corr_matrix);
     file_path = PATH_PLOT_IMAGES + "corr_matrix_kw" + EXTENSION_IMG;
     save_img(file_path);
     
@@ -146,7 +145,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     fprintf("-------Top %d RF ranked features by importance-------\n", N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);
 
     for j=(1:N_TOP_DISCRIMINANT_RF_RANKED_FEATURES)
-        fprintf("%d - %s - I = %.3f\n", j, col_names_{idx(j)}, importances(j));
+        fprintf("%d - %d - I = %.3f\n", j, idx(j), importances(j));
     end
     
     file_path = PATH_PLOT_IMAGES + "importance_rf" + EXTENSION_IMG;

@@ -43,7 +43,6 @@ end
 features = table2array(csv_data(:, 2:end - 1));
 features = to_data_struct(features, target_num);
 
-% PCA
 results_table = cell(size(FUNCTIONS_NORMALIZATION, 2) * ...
     size(FUNCTIONS_DISTANCES, 2) * ...
     size(target_labels, 2), 8);
@@ -62,6 +61,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     features_.X = proj.X;
     features_.dim = size(proj.X, 1);
     
+    % PCA
 
     figure;
     plot(eigenValues, 'o-.');
@@ -76,6 +76,8 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     ylabel('% of variance');
     file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
     save_img(file_path);
+
+    % End of PCA
 
     % Correlation study
     
@@ -213,9 +215,5 @@ results_table = cell2table(results_table, 'VariableNames', header);
 % write the table to an Excel file
 writetable(results_table, 'results.xlsx');
 
-% End of PCA
-
 % End of Minimum distance classifier
-
-
 

@@ -17,9 +17,9 @@ FRACTION_TRAINING = FRACTION_DEVELOPMENT * 0.8;
 FRACTION_VALIDATION = FRACTION_DEVELOPMENT * 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
 FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
-N_PROJECTION_FEATURES = 25;
-N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 15;
-N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 10;
+N_PROJECTION_FEATURES = 15;
+N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 40;
+N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 25;
 
 % Load data
 fprintf("Loading dataset...\n");
@@ -56,43 +56,6 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 
     features_.X = normalize(features_.X, norm_function);
     x = features_.X;
-    fprintf("Applying PCA for %d dimensions...\n", N_PROJECTION_FEATURES);
-    [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features_, N_PROJECTION_FEATURES);
-    features_.X = proj.X;
-    features_.dim = size(proj.X, 1);
-    
-    % PCA
-
-    figure;
-    plot(eigenValues, 'o-.');
-    xlabel('Principal component');
-    ylabel('Eigen value');
-    file_path = PATH_PLOT_IMAGES + "pca_eigen_values_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
-    
-    figure;
-    plot(individual_variance, 'o-');
-    xlabel('Principal component');
-    ylabel('% of variance');
-    file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
-
-    % End of PCA
-
-    % Correlation study
-    
-    fprintf("Calculating %d PCA features correlation matrix...\n", N_PROJECTION_FEATURES);
-    corr_matrix = corrcoef(features_.X'); % Only the ones most important in PCA analysis
-    
-    figure;
-    heatmap((1:N_PROJECTION_FEATURES), (1:N_PROJECTION_FEATURES), corr_matrix);
-    file_path = PATH_PLOT_IMAGES + "corr_matrix_pca_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
-
-    figure;
-    ppatterns(features_);
-    file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
-    save_img(file_path);
 
     % Kruskal Wallis
 
@@ -154,6 +117,46 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     save_img(file_path);
     
     % End of RandomForest
+
+    fprintf("Applying PCA for %d dimensions...\n", N_PROJECTION_FEATURES);
+    [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features_, N_PROJECTION_FEATURES);
+    features_.X = proj.X;
+    features_.dim = size(proj.X, 1);
+    
+    % PCA
+
+    figure;
+    plot(eigenValues, 'o-.');
+    xlabel('Principal component');
+    ylabel('Eigen value');
+    file_path = PATH_PLOT_IMAGES + "pca_eigen_values_" + norm_function + EXTENSION_IMG;
+    save_img(file_path);
+    
+    figure;
+    plot(individual_variance, 'o-');
+    xlabel('Principal component');
+    ylabel('% of variance');
+    file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
+    save_img(file_path);
+
+    % End of PCA
+
+    % Correlation study
+    
+    fprintf("Calculating %d PCA features correlation matrix...\n", N_PROJECTION_FEATURES);
+    corr_matrix = corrcoef(features_.X'); % Only the ones most important in PCA analysis
+    
+    figure;
+    heatmap((1:N_PROJECTION_FEATURES), (1:N_PROJECTION_FEATURES), corr_matrix);
+    file_path = PATH_PLOT_IMAGES + "corr_matrix_pca_" + norm_function + EXTENSION_IMG;
+    save_img(file_path);
+
+    figure;
+    ppatterns(features_);
+    file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
+    save_img(file_path);
+
+    % End of correlation study
 
     % Minimum distance classifier
 

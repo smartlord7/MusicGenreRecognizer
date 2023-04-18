@@ -48,115 +48,29 @@ results_table = cell(size(FUNCTIONS_NORMALIZATION, 2) * ...
     size(target_labels, 2), 8);
 
 count = 1;
+metadata = struct;
+metadata.n_top_features_kw = N_TOP_DISCRIMINANT_KW_RANKED_FEATURES;
+metadata.n_top_features_rf = N_TOP_DISCRIMINANT_RF_RANKED_FEATURES;
+metadata.dim_pca = N_PROJECTION_FEATURES;
+metadata.base_path = PATH_PLOT_IMAGES;
+metadata.ext = EXTENSION_IMG;
+metdata.plot = true;
+
 for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     norm_function = FUNCTIONS_NORMALIZATION(i);
+    metadata.norm_function = norm_function;
     fprintf("Normalizing using '%s'...\n", norm_function);
     features_ = features;
     col_names_ = col_names;
 
     features_.X = normalize(features_.X, norm_function);
-    x = features_.X;
 
-    % Kruskal Wallis
+    features_ = rank_kruskal_wallis(features_, metadata);
+    
+    features_ = rank_random_forest(features_, metadata);
 
-    [features_h, features_idx] = rank_kruskal_wallis(features_);
-    top_features = features_h(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
-    top_features_idx = features_idx(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
+    features_ = project_pca(features_, metadata);
     
-    fprintf("Applying Kruskal-Wallis test...\n");
-    fprintf("-------Top %d KW ranked features-------\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
-
-    for j=(1:N_TOP_DISCRIMINANT_KW_RANKED_FEATURES)
-        fprintf("%d - %d - H = %.3f\n", j, features_idx(j), features_h(j));
-    end
-    
-    features_.X = features_.X(top_features_idx, :); % Update the features to the ones most relevant
-    features_.dim = size(features_.X, 1);
-%     test_norm(features_, col_names_);
-    
-    figure;
-    scatter((1:size(features_h, 2)), features_h);
-    file_path = PATH_PLOT_IMAGES + "scatter_h_kw" + EXTENSION_IMG;
-    save_img(file_path);
-
-    figure;
-    ppatterns(features_);
-    file_path = PATH_PLOT_IMAGES + "patterns_pca_kw" + EXTENSION_IMG;
-    save_img(file_path);
-
-    
-    % End of Kruscal Wallis
-    
-    % Correlation study
-    
-    fprintf("Calculating %d top KW features correlation matrix...\n", N_TOP_DISCRIMINANT_KW_RANKED_FEATURES);
-    corr_matrix = corrcoef(features_.X'); % Only 20 best
-    figure;
-    heatmap((1:features_.dim), (1:features_.dim), corr_matrix);
-    file_path = PATH_PLOT_IMAGES + "corr_matrix_kw" + EXTENSION_IMG;
-    save_img(file_path);
-    
-    % End of correlation study
-    
-    % RandomForest
-    
-    importances = rank_rf_importance(features_);
-    [importances, idx] = sort(importances, "descend");
-    idx = idx(1:N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);
-    features_.X = features_.X(idx, :);
-    features_.dim = size(features_.X, 1);
-
-    fprintf("Applying Random Forest test...\n");
-    fprintf("-------Top %d RF ranked features by importance-------\n", N_TOP_DISCRIMINANT_RF_RANKED_FEATURES);
-
-    for j=(1:N_TOP_DISCRIMINANT_RF_RANKED_FEATURES)
-        fprintf("%d - %d - I = %.3f\n", j, idx(j), importances(j));
-    end
-    
-    file_path = PATH_PLOT_IMAGES + "importance_rf" + EXTENSION_IMG;
-    save_img(file_path);
-    
-    % End of RandomForest
-
-    fprintf("Applying PCA for %d dimensions...\n", N_PROJECTION_FEATURES);
-    [proj, eigenValues, eigenVectors, individual_variance] = project_pca(features_, N_PROJECTION_FEATURES);
-    features_.X = proj.X;
-    features_.dim = size(proj.X, 1);
-    
-    % PCA
-
-    figure;
-    plot(eigenValues, 'o-.');
-    xlabel('Principal component');
-    ylabel('Eigen value');
-    file_path = PATH_PLOT_IMAGES + "pca_eigen_values_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
-    
-    figure;
-    plot(individual_variance, 'o-');
-    xlabel('Principal component');
-    ylabel('% of variance');
-    file_path = PATH_PLOT_IMAGES + "pca_variance_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
-
-    % End of PCA
-
-    % Correlation study
-    
-    fprintf("Calculating %d PCA features correlation matrix...\n", N_PROJECTION_FEATURES);
-    corr_matrix = corrcoef(features_.X'); % Only the ones most important in PCA analysis
-    
-    figure;
-    heatmap((1:N_PROJECTION_FEATURES), (1:N_PROJECTION_FEATURES), corr_matrix);
-    file_path = PATH_PLOT_IMAGES + "corr_matrix_pca_" + norm_function + EXTENSION_IMG;
-    save_img(file_path);
-
-    figure;
-    ppatterns(features_);
-    file_path = PATH_PLOT_IMAGES + "patterns_pca" + EXTENSION_IMG;
-    save_img(file_path);
-
-    % End of correlation study
 
     % Minimum distance classifier
 

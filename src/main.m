@@ -74,12 +74,23 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 
     % Minimum distance classifier
 
-
     data_mdc = features_; 
     [train_data, val_data, test_data] = divide_data(features_, FRACTION_TRAINING, ...
-   FRACTION_VALIDATION, FRACTION_TESTING); % Divide the data for training, validation and testing
- 
+    FRACTION_VALIDATION, FRACTION_TESTING); % Divide the data for training, validation and testing
 
+    % TESTING FISHER HERE (NO CYCLE TARGETS)
+
+    train_data_ = train_data;
+    val_data_ = val_data;
+    choice_class = 1;
+
+    train_data_ = to_bin_classification(train_data_, choice_class);
+    val_data_ = to_bin_classification(val_data_, choice_class);
+
+    [predicted, error, accuracy] = fisher_LDA(train_data_, val_data_);
+
+    % FINISH TESTING FISHER HERE
+ 
     for j=(1:size(target_labels))
         train_data_ = train_data;
         val_data_ = val_data;

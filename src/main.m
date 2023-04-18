@@ -17,6 +17,7 @@ FRACTION_TRAINING = FRACTION_DEVELOPMENT * 0.8;
 FRACTION_VALIDATION = FRACTION_DEVELOPMENT * 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
 FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
+LABELS_BINARY = {'Negative', 'Positive'};
 N_PROJECTION_FEATURES = 15;
 N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 40;
 N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 25;
@@ -59,10 +60,9 @@ metdata.plot = true;
 for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     norm_function = FUNCTIONS_NORMALIZATION(i);
     metadata.norm_function = norm_function;
-    fprintf("Normalizing using '%s'...\n", norm_function);
     features_ = features;
-    col_names_ = col_names;
 
+    fprintf("Normalizing using '%s'...\n", norm_function);
     features_.X = normalize(features_.X, norm_function);
 
     features_ = rank_kruskal_wallis(features_, metadata);
@@ -77,7 +77,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 
     data_mdc = features_; 
     [train_data, val_data, test_data] = divide_data(features_, FRACTION_TRAINING, ...
-   FRACTION_VALIDATION,FRACTION_TESTING); % Divide the data for training, validation and testing
+   FRACTION_VALIDATION, FRACTION_TESTING); % Divide the data for training, validation and testing
  
 
     for j=(1:size(target_labels))
@@ -99,7 +99,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
             % Run the Minimum Distance Classifier
             predicted = min_dist_classifier(train_data_, val_data_, dist_func);
             file_path = PATH_PLOT_IMAGES + "cm_" + genre + "_" + norm_function + "_" + dist_func + EXTENSION_IMG;
-            [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(val_data_.y, predicted, file_path);
+            [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(val_data_.y, predicted, LABELS_BINARY, file_path);
             fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
                 "Specificity: %.3f\n" + ...

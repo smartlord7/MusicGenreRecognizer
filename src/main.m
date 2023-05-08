@@ -78,18 +78,21 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     [train_data, val_data, test_data] = divide_data(features_, FRACTION_TRAINING, ...
     FRACTION_VALIDATION, FRACTION_TESTING); % Divide the data for training, validation and testing
 
-    % TESTING FISHER HERE (NO CYCLE TARGETS)
-
-    train_data_ = train_data;
-    val_data_ = val_data;
+    % TESTING  HERE ------------------------------------
     choice_class = 1;
+    traindata = train_data;
+    valdata = val_data;
+    train_data_bin = to_bin_classification(train_data, choice_class);
+    val_data_bin = to_bin_classification(val_data, choice_class);
 
-    train_data_ = to_bin_classification(train_data_, choice_class);
-    val_data_ = to_bin_classification(val_data_, choice_class);
+    %predicted_test = min_dist_classifier(train_data_bin, val_data_bin, "euclidean" , "Binary");
+    [ypred, cerror] = fisher_LDA(train_data_bin, val_data_bin);
+    %predicted_test = bayes_classifier(traindata, valdata, "Multi-Class");
+    %[acc, k] = KNN_classifier(traindata, valdata);
+    %[acc, k] = SVM_classifier(train_data_bin, val_data_bin);
+    
 
-    [predicted, error, accuracy] = fisher_LDA(train_data_, val_data_);
-
-    % FINISH TESTING FISHER HERE
+    % FINISH TESTING  HERE -----------------------------
  
     for j=(1:size(target_labels))
         train_data_ = train_data;

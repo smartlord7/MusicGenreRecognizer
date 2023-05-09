@@ -85,11 +85,11 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     train_data_bin = to_bin_classification(train_data, choice_class);
     val_data_bin = to_bin_classification(val_data, choice_class);
 
-    %predicted_test = min_dist_classifier(train_data_bin, val_data_bin, "euclidean" , "Binary");
-    [ypred, cerror] = fisher_LDA(train_data_bin, val_data_bin);
-    %predicted_test = bayes_classifier(traindata, valdata, "Multi-Class");
-    %[acc, k] = KNN_classifier(traindata, valdata);
-    %[acc, k] = SVM_classifier(train_data_bin, val_data_bin);
+    [predicted_train, predicted_test] = min_dist_classifier(train_data, val_data, "euclidean" , "s");
+    %[predicted_train, predicted_test] = fisher_LDA(train_data_bin, val_data_bin);
+    %[predicted_train, predicted_test] = bayes_classifier(traindata, valdata, "Multi-Class");
+    %[predicted_train, predicted_test] = KNN_classifier(traindata, valdata);
+    %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin);
     
 
     % FINISH TESTING  HERE -----------------------------

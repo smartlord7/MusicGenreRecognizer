@@ -1,4 +1,4 @@
-function [y_predicted] = min_dist_classifier(train_data, val_data, dist_func, classif_type)
+function [y_predicted_train, y_predicted_val] = min_dist_classifier(train_data, val_data, dist_func, classif_type)
 %MDC_EUCLIDEAN Summary of this function goes here
 
 % Separate the features and labels
@@ -16,7 +16,9 @@ end
 
 % Compute the euclidean distances
 x_val = val_data.X;
-distances = pdist2(x_val', class_means, dist_func);
+distances_val = pdist2(x_val', class_means, dist_func);
+distances_train = pdist2(train_data.X', class_means, dist_func);
+
 
 if (classif_type == "Binary") 
 
@@ -28,8 +30,10 @@ if (classif_type == "Binary")
 
 else
     
-    [m, min_idx] = min(distances, [], 2);
-    y_predicted = class_labels(min_idx);
+    [m, min_idx_val] = min(distances_val, [], 2);
+    [m, min_idx_train] = min(distances_train, [], 2);
+    y_predicted_train = class_labels(min_idx_train);
+    y_predicted_val = class_labels(min_idx_val);
     
 end
 

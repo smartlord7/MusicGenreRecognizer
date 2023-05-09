@@ -1,4 +1,4 @@
-function [ypred, error, accuracy] = fisher_LDA(train_data, val_data)
+function [ypred_train, ypred_val] = fisher_LDA(train_data, val_data)
 %FISHER_LDA Summary of this function goes here
 
 % Change target labels from 0 and 1 to 1 and 2, respectively
@@ -14,17 +14,15 @@ val_data.y = new_labels(target_val);
 model = fld(train_data);
 
 % Test
-ypred = linclass(val_data.X, model);
-figure; ppatterns(train_data); pline(model);
+ypred_train = linclass(train_data.X, model);
+ypred_val = linclass(val_data.X, model);
 
+%figure; ppatterns(train_data); pline(model);
 % Isto foi mais pa testar imediatamente sem o ciclo
-error = cerror(ypred, val_data.y);
-C = confusionmat(val_data.y, ypred);
-accuracy = sum(diag(C)) / sum(C(:));
+%error = cerror(ypred, val_data.y);
+%C = confusionmat(val_data.y, ypred);
+%accuracy = sum(diag(C)) / sum(C(:));
 
-% Display the confusion matrix
-disp('Confusion matrix:');
-disp(C);
 
 end
 

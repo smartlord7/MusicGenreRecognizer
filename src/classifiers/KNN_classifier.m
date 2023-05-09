@@ -1,4 +1,4 @@
-function [best_accuracy, best_k] = KNN_classifier(train_data, val_data)
+function [ypred2_train, ypred2_val] = KNN_classifier(train_data, val_data)
 %KNN_CLASSIFIER Summary of this function goes here
 
 % Choose a range of values for K
@@ -32,10 +32,18 @@ for j = 1:n_permutations
     end
 end
 
-med_err = mean(err, 1);
-std_err = std(err,[],1);
+merr=mean(err);
+serr=std(err);
 
-ix = find(med_err==min(med_err));
+ix=find(merr==min(merr));
+ix=ix(1);
+ix_min_err=find(err(:,ix)==min(err(:,ix)));
+
+best=models{ix_min_err, ix};
+%end
+ypred2_train = predict(best, train_data.X');
+ypred2_val = predict(best, val_data.X');
+err2=cerror(ypred2', val_data.y)*100;
 
 
 

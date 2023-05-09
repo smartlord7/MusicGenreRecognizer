@@ -1,4 +1,4 @@
-function [y_predicted, error] = bayes_classifier(train_data, val_data, classif_type)
+function [y_predicted_train, y_predicted_val] = bayes_classifier(train_data, val_data, classif_type)
 %MDC_EUCLIDEAN Summary of this function goes here
 
 if (classif_type == "Binary")
@@ -28,9 +28,11 @@ for i = 1:n_classes
 end
 
 % Make predictions using the trained model
-y_predicted = bayescls(train_data.X, model);
-y_predicted = y_predicted - 1; % Predicts are 1 and 2.. 
-error = cerror(y_predicted, train_data.y);
+y_predicted_train = bayescls(train_data.X, model);
+y_predicted_val = bayescls(val_data.X, model);
+y_predicted_train = y_predicted_train - 1; 
+y_predicted_val = y_predicted_val - 1; 
+error = cerror(y_predicted, val_data.y);
 
 end
 

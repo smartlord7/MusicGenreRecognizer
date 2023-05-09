@@ -1,4 +1,4 @@
-function [outputArg1,outputArg2] = SVM_classifier(train_data, val_data)
+function [ypred2_train,ypred2_val] = SVM_classifier(train_data, val_data)
 %SVM_CLASSIFIER Summary of this function goes here
 
 c_pot=[-20:6];
@@ -43,7 +43,8 @@ ix_min_err=find(err(:,ix)==min(err(:,ix)));
 
 best=models{ix_min_err, ix};
 %end
-[ypred2,dfce] = predict(best, val_data.X');
+ypred2_train = predict(best, train_data.X');
+ypred2_val = predict(best, val_data.X');
 err2=cerror(ypred2', val_data.y)*100;
 
 end

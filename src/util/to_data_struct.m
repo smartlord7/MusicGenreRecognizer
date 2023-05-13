@@ -6,6 +6,6 @@ function [data_struct] = to_data_struct(x, y, varargin)
         
     % Optional argument: dataset name
     if nargin == 3   
-        data_struct.name = varargin(3);
+        data_struct.name = string(varargin(1));
     end
 end

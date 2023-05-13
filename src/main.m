@@ -18,31 +18,12 @@ FRACTION_VALIDATION = FRACTION_DEVELOPMENT * 0.2;
 FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
 FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
 LABELS_BINARY = {'Negative', 'Positive'};
+LABELS_MULTICLASS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 N_PROJECTION_FEATURES = 15;
 N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 40;
 N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 25;
 
-% Load data
-fprintf("Loading dataset...\n");
-csv_data = readtable(PATH_FEATURES);
-col_names = csv_data.Properties.VariableNames(2:end - 1);
-
-for i=(1:size(col_names, 2))
-    rep = strrep(col_names{i}, '_', '-');
-    col_names{i} = rep; % Replace underscores to prevent bad format in plots
-end
-
-% Define a cell array of the target labels
-target_labels = table2cell(unique(csv_data(:, end))); % Discard first column (file name) and last column (label)
-
-% Use the ismember function to convert the target labels to numerical format
-target_num = zeros(size(csv_data, 1), 1);
-for i = 1:numel(target_labels)
-    target_num(ismember(csv_data.label, target_labels{i})) = i - 1;
-end
-
-features = table2array(csv_data(:, 2:end - 1));
-features = to_data_struct(features, target_num);
+[col_names, features, target_labels] = import_dataset(PATH_FEATURES);
 
 results_table = cell(size(FUNCTIONS_NORMALIZATION, 2) * ...
     size(FUNCTIONS_DISTANCES, 2) * ...
@@ -67,7 +48,7 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
 
     features_ = rank_kruskal_wallis(features_, metadata);
     
-    features_ = rank_random_forest(features_, metadata);
+    %features_ = rank_random_forest(features_, metadata);
 
     features_ = project_pca(features_, metadata);
     

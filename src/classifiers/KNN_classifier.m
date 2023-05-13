@@ -8,6 +8,7 @@ k_range = 10;
 n_permutations = 10;
 models = cell(n_permutations, k_range);
 err = zeros(n_permutations, k_range);
+
 for j = 1:n_permutations
     % Permute the data
     permuted_idx_trn = randperm(train_data.num_data);
@@ -44,8 +45,6 @@ best=models{ix_min_err, ix};
 ypred2_train = predict(best, train_data.X');
 ypred2_val = predict(best, val_data.X');
 err2=cerror(ypred2', val_data.y)*100;
-
-
 
 
 end

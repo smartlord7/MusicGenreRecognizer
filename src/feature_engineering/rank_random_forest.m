@@ -16,16 +16,17 @@ function [features] = rank_random_forest(features, metadata)
         fprintf("%d - %d - I = %.3f\n", j, idx(j), importances(j));
     end
     
-    figure;
-    bar(importances);
-    title("Interaction-Curvature Test")
-    ylabel("Predictor Importance Estimates")
-    xlabel("Predictors")
-    h = gca;
-    h.XTickLabel = rf.PredictorNames;
-    h.XTickLabelRotation = 45;
-    h.TickLabelInterpreter = "none";
-    file_path = base_path + "importance_rf" + ext;
-    save_img(file_path);
-    
+    if Const.PLOT == true
+        figure;
+        bar(importances);
+        title("Interaction-Curvature Test")
+        ylabel("Predictor Importance Estimates")
+        xlabel("Predictors")
+        h = gca;
+        h.XTickLabel = rf.PredictorNames;
+        h.XTickLabelRotation = 45;
+        h.TickLabelInterpreter = "none";
+        file_path = base_path + "importance_rf" + ext;
+        save_img(file_path);
+    end  
 end

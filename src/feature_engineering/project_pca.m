@@ -11,20 +11,22 @@ function [features] = project_pca(features, metadata)
     features.X = proj.X;
     features.dim = size(proj.X, 1);
 
-    figure;
-    plot(eigenValues, 'o-.');
-    xlabel('Principal component');
-    ylabel('Eigen value');
-    file_path = base_path + "pca_eigen_values_" + norm_function + ext;
-    save_img(file_path);
-    
-    figure;
-    plot(individual_variance, 'o-');
-    xlabel('Principal component');
-    ylabel('% of variance');
-    file_path = base_path + "pca_variance_" + norm_function + ext;
-    save_img(file_path);
+    if Const.PLOT == true
+        figure;
+        plot(eigenValues, 'o-.');
+        xlabel('Principal component');
+        ylabel('Eigen value');
+        file_path = base_path + "pca_eigen_values_" + norm_function + ext;
+        save_img(file_path);
+        
+        figure;
+        plot(individual_variance, 'o-');
+        xlabel('Principal component');
+        ylabel('% of variance');
+        file_path = base_path + "pca_variance_" + norm_function + ext;
+        save_img(file_path);
 
+    end
     % End of PCA
 
     % Correlation study
@@ -32,15 +34,17 @@ function [features] = project_pca(features, metadata)
     fprintf("Calculating %d PCA features correlation matrix...\n", dim);
     corr_matrix = corrcoef(features.X'); % Only the ones most important in PCA analysis
     
-    figure;
-    heatmap((1:dim), (1:dim), corr_matrix);
-    file_path = base_path + "corr_matrix_pca_" + norm_function + ext;
-    save_img(file_path);
-
-    figure;
-    ppatterns(features);
-    file_path = base_path + "patterns_pca" + ext;
-    save_img(file_path);
+    if Const.PLOT == true
+        figure;
+        heatmap((1:dim), (1:dim), corr_matrix);
+        file_path = base_path + "corr_matrix_pca_" + norm_function + ext;
+        save_img(file_path);
+    
+        figure;
+        ppatterns(features);
+        file_path = base_path + "patterns_pca" + ext;
+        save_img(file_path);
+    end
 
     % End of correlation study
 end

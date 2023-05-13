@@ -19,26 +19,30 @@ function [features] = rank_kruskal_wallis(features, metadata)
     features.dim = size(features.X, 1);
     % test_norm(features, col_names_);
     
-    figure;
-    scatter((1:size(features_h, 2)), features_h);
-    file_path = base_path + "scatter_h_kw" + ext;
-    save_img(file_path);
-
-    figure;
-    ppatterns(features);
-    file_path = base_path + "patterns_pca_kw" + ext;
-    save_img(file_path);
+    if Const.PLOT == true
+        figure;
+        scatter((1:size(features_h, 2)), features_h);
+        file_path = base_path + "scatter_h_kw" + ext;
+        save_img(file_path);
+    
+        figure;
+        ppatterns(features);
+        file_path = base_path + "patterns_pca_kw" + ext;
+        save_img(file_path);
+    end
 
     % End of Kruscal Wallis
     
     % Correlation study
     
-    fprintf("Calculating %d top KW features correlation matrix...\n", n_top_features);
-    corr_matrix = corrcoef(features.X'); % Only 20 best
-    figure;
-    heatmap((1:features.dim), (1:features.dim), corr_matrix);
-    file_path = base_path + "corr_matrix_kw" + ext;
-    save_img(file_path);
+    if Const.PLOT == true
+        fprintf("Calculating %d top KW features correlation matrix...\n", n_top_features);
+        corr_matrix = corrcoef(features.X'); % Only 20 best
+        figure;
+        heatmap((1:features.dim), (1:features.dim), corr_matrix);
+        file_path = base_path + "corr_matrix_kw" + ext;
+        save_img(file_path);
+    end
     
     % End of correlation study
 end

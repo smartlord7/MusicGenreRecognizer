@@ -22,11 +22,17 @@ distances_train = pdist2(train_data.X', class_means, dist_func);
 
 if (classif_type == "Binary") 
 
-    m = min(distances, [], 2);
-    idx = (distances == m);
+    m = min(distances_train, [], 2);
+    idx = (distances_train == m);
     [row_idx, col_idx] = find(idx == 1);
-    y_predicted = accumarray(row_idx, col_idx, [], @(x) sort(x)')';
-    y_predicted = y_predicted - 1; % labels start in 0
+    y_predicted_train = accumarray(row_idx, col_idx, [], @(x) sort(x)')';
+    y_predicted_train = y_predicted_train - 1; % labels start in 0
+
+    m2 = min(distances_val, [], 2);
+    idx2 = (distances_val == m2);
+    [row_idx2, col_idx2] = find(idx2 == 1);
+    y_predicted_val = accumarray(row_idx2, col_idx2, [], @(x) sort(x)')';
+    y_predicted_val = y_predicted_val - 1; % labels start in 0
 
 else
     
@@ -37,7 +43,8 @@ else
     
 end
 
-err_test=cerror(y_predicted, val_data.y)*100;
+err_train=cerror(y_predicted_train, train_data.y)*100;
+err_val=cerror(y_predicted_val, val_data.y)*100;
 
 end
 

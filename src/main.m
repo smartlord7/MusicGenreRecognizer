@@ -79,19 +79,26 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     FRACTION_VALIDATION, FRACTION_TESTING); % Divide the data for training, validation and testing
 
     % TESTING  HERE ------------------------------------
-    choice_class = 1;
-    traindata = train_data;
-    valdata = val_data;
-    train_data_bin = to_bin_classification(train_data, choice_class);
-    val_data_bin = to_bin_classification(val_data, choice_class);
+    for j=(1:size(target_labels))
+        train_data_ = train_data;
+        val_data_ = val_data;
 
-    [predicted_train, predicted_test] = min_dist_classifier(train_data, val_data, "euclidean" , "s");
-    %[predicted_train, predicted_test] = fisher_LDA(train_data_bin, val_data_bin);
-    %[predicted_train, predicted_test] = bayes_classifier(traindata, valdata, "Multi-Class");
-    %[predicted_train, predicted_test] = KNN_classifier(traindata, valdata);
-    %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin);
+        choice_classt = j - 1;
+        %choice_classt = 0;
+        traindata = train_data;
+        valdata = val_data;
+        train_data_bin = to_bin_classification(train_data, choice_classt);
+        val_data_bin = to_bin_classification(val_data, choice_classt);
     
-
+        [predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "euclidean" , "Binary");
+        %[predicted_train, predicted_test] = fisher_LDA(train_data_bin, val_data_bin);
+        
+        %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
+        %[predicted_train, predicted_test] = bayes_classifier(traindata, valdata, "Multi-Class");
+        %[predicted_train, predicted_test] = KNN_classifier(traindata, valdata);
+        %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
+    
+    end
     % FINISH TESTING  HERE -----------------------------
  
     for j=(1:size(target_labels))
@@ -104,21 +111,22 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
         
         % Binarize target labels: 1 for the chosen class and 0 for the
         % remaining
-        train_data_ = to_bin_classification(train_data_, choice_class);
-        val_data_ = to_bin_classification(val_data_, choice_class);
+        train_data_ = to_bin_classification(train_data_, choice_classt);
+        val_data_ = to_bin_classification(val_data_, choice_classt);
 
         for k=(1:size(FUNCTIONS_DISTANCES, 2))
             dist_func = FUNCTIONS_DISTANCES(k);
 
             % Run the Minimum Distance Classifier
-            predicted = min_dist_classifier(train_data_, val_data_, dist_func);
+            [predicted_train, predicted_test] = min_dist_classifier(train_data_, val_data_, 'euclidean' , "Binary");
             file_path = PATH_PLOT_IMAGES + "cm_" + genre + "_" + norm_function + "_" + dist_func + EXTENSION_IMG;
-            [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(val_data_.y, predicted, LABELS_BINARY, file_path);
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_.y, predicted_test, LABELS_BINARY, file_path);
             fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
                 "Specificity: %.3f\n" + ...
                 "Sensitivity: %.3f\n" + ...
-                "F-measure: %.3f\n", mse, accuracy, specificity, sensitivity, f_measure);
+                "F-measure: %.3f\n"+ ...
+                "Auc: %.3f\n", mse, accuracy, specificity, sensitivity, f_measure, auc);
             
              % store the results in a cell array
                 results_table{count, 1} = FUNCTIONS_NORMALIZATION(i);

@@ -1,4 +1,4 @@
-function [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(y, y_predicted, labels, plot_path)
+function [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(y, y_predicted, labels, plot_path)
     n_samples = size(y, 2);
 
     % Compute mean squared error
@@ -22,12 +22,12 @@ function [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(
     title("");
     hold off;
     
-    save_img(plot_path);
+    %save_img(plot_path);
 
     % Compute accuracy
     accuracy = sum(diag(conf_mat))/sum(conf_mat(:));
 
-    if size(y) == 2
+    if length(unique(y)) == 2
     
         % Compute specificity
         specificity = conf_mat(2,2) / (conf_mat(2,2) + conf_mat(2,1));
@@ -38,11 +38,27 @@ function [mse, accuracy, specificity, sensitivity, f_measure] = eval_classifier(
         % Compute F-measure (F1-score)
         precision = conf_mat(1,1) / (conf_mat(1,1) + conf_mat(2,1));
         f_measure = 2 * (precision * sensitivity) / (precision + sensitivity);
+
+        % Compute ROC curve and AUC
+        [fpr, tpr] = perfcurve(y, y_predicted, '1');
+
+        % Compute AUC
+        auc = trapz(fpr, tpr);
+        
+        % Plot ROC curve
+        f = figure;
+        plot(fpr, tpr)
+        xlabel('False Positive Rate')
+        ylabel('True Positive Rate')
+        title('ROC Curve')
+        grid on
+        %save_img(plot_path);
     else
         specificity = nan(1);
         sensitivity = nan(1);
         precision = nan(1);
         f_measure = nan(1);
+        auc = nan(1);
     end
 end
 

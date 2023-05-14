@@ -57,8 +57,9 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
             %[predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
             %[predicted_train, predicted_test] = fisher_LDA_classifier(sT, sV);
             %[predicted_train, predicted_test] = SVM_classifier(sT, sV, "Multiclass");
-            [predicted_train, predicted_test] = bayes_classifier(sT, sV, "Multiclass");
-            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY', predicted_test', Const.LABELS_BINARY, "svm" + genre + "_" + norm_function + string(k));
+            %[predicted_train, predicted_test] = bayes_classifier(sT, sV, "Multiclass");
+            [predicted_train, predicted_test] = KNN_classifier(sT, sV);
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY', predicted_test', Const.LABELS_BINARY, "knn" + genre + "_" + norm_function + string(k));
     
             % Store the performance metrics for the current partition
             mse_array(k) = mse;
@@ -109,5 +110,5 @@ header = {'Normalization function', ...
 'Class', 'MSE', 'Accuracy', 'Specificity', 'Sensitivity', 'F-measure', 'AUC'};
 results_table = cell2table(results_table, 'VariableNames', header);
 % write the table to an Excel file
-writetable(results_table, 'bayes_multi.xlsx');
+writetable(results_table, 'knn_multi.xlsx');
 % End of Minimum distance classifier

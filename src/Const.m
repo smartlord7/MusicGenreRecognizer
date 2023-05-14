@@ -19,8 +19,8 @@ classdef Const
         N_PROJECTION_FEATURES = 8;
         N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 30;
         N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 10;
-        PLOT = false;
-        N_PARTITIONS = 10;
+        PLOT = true;
+        N_PARTITIONS = 5;
     end 
 end
 

@@ -8,21 +8,22 @@ function [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classi
     conf_mat = confusionmat(y, y_predicted);
     
     % Create confusion chart
-    f = figure(1);
-    plotconfusion(y, y_predicted)
-    fh = gcf;
-    ax = gca;
-    ax.FontSize = 8;
-    set(findobj(ax,'type','test'),'fontsize',3);
-    ah = fh.Children(2);
-    ah.XLabel.String = 'Actual';
-    ah.YLabel.String = 'Predicted';
-    ax.XTickLabel = labels;
-    ax.YTickLabel = labels;
-    title("");
-    hold off;
-    
-    %save_img(plot_path);
+    if Const.PLOT == true
+        f = figure(1);
+        plotconfusion(y, y_predicted)
+        fh = gcf;
+        ax = gca;
+        ax.FontSize = 8;
+        set(findobj(ax,'type','test'),'fontsize',3);
+        ah = fh.Children(2);
+        ah.XLabel.String = 'Actual';
+        ah.YLabel.String = 'Predicted';
+        ax.XTickLabel = labels;
+        ax.YTickLabel = labels;
+        title("");
+        hold off;
+        save_img(plot_path);
+    end
 
     % Compute accuracy
     accuracy = sum(diag(conf_mat))/sum(conf_mat(:));
@@ -46,13 +47,15 @@ function [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classi
         auc = trapz(fpr, tpr);
         
         % Plot ROC curve
-        f = figure;
-        plot(fpr, tpr)
-        xlabel('False Positive Rate')
-        ylabel('True Positive Rate')
-        title('ROC Curve')
-        grid on
-        %save_img(plot_path);
+        if Const.PLOT == true
+            f = figure;
+            plot(fpr, tpr)
+            xlabel('False Positive Rate')
+            ylabel('True Positive Rate')
+            title('ROC Curve')
+            grid on
+            save_img(plot_path);
+        end
     else
         specificity = nan(1);
         sensitivity = nan(1);

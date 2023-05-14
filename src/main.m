@@ -5,60 +5,23 @@ clear
 % Make this program reproducible
 rng(0)
 
-% Constants
-DIRECTORY_DATA = "../data/";
-EXTENSION_FEATURES = ".csv";
-EXTENSION_IMG = ".png";
-PATH_PLOT_IMAGES = "../img/plots/";
-PATH_FEATURES = DIRECTORY_DATA + "features" + EXTENSION_FEATURES;
-FRACTION_DEVELOPMENT = 0.8;
-FRACTION_TESTING = 0.2;
-FRACTION_TRAINING = FRACTION_DEVELOPMENT * 0.8;
-FRACTION_VALIDATION = FRACTION_DEVELOPMENT * 0.2;
-FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
-FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
-LABELS_BINARY = {'Negative', 'Positive'};
-N_PROJECTION_FEATURES = 15;
-N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 40;
-N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 25;
+[col_names, features, target_labels] = import_dataset(Const.PATH_FEATURES, "GTZAN");
 
-% Load data
-fprintf("Loading dataset...\n");
-csv_data = readtable(PATH_FEATURES);
-col_names = csv_data.Properties.VariableNames(2:end - 1);
-
-for i=(1:size(col_names, 2))
-    rep = strrep(col_names{i}, '_', '-');
-    col_names{i} = rep; % Replace underscores to prevent bad format in plots
-end
-
-% Define a cell array of the target labels
-target_labels = table2cell(unique(csv_data(:, end))); % Discard first column (file name) and last column (label)
-
-% Use the ismember function to convert the target labels to numerical format
-target_num = zeros(size(csv_data, 1), 1);
-for i = 1:numel(target_labels)
-    target_num(ismember(csv_data.label, target_labels{i})) = i - 1;
-end
-
-features = table2array(csv_data(:, 2:end - 1));
-features = to_data_struct(features, target_num);
-
-results_table = cell(size(FUNCTIONS_NORMALIZATION, 2) * ...
-    size(FUNCTIONS_DISTANCES, 2) * ...
+results_table = cell(size(Const.FUNCTIONS_NORMALIZATION, 2) * ...
+    size(Const.FUNCTIONS_DISTANCES, 2) * ...
     size(target_labels, 2), 8);
 
 count = 1;
 metadata = struct;
-metadata.n_top_features_kw = N_TOP_DISCRIMINANT_KW_RANKED_FEATURES;
-metadata.n_top_features_rf = N_TOP_DISCRIMINANT_RF_RANKED_FEATURES;
-metadata.dim_pca = N_PROJECTION_FEATURES;
-metadata.base_path = PATH_PLOT_IMAGES;
-metadata.ext = EXTENSION_IMG;
+metadata.n_top_features_kw = Const.N_TOP_DISCRIMINANT_KW_RANKED_FEATURES;
+metadata.n_top_features_rf = Const.N_TOP_DISCRIMINANT_RF_RANKED_FEATURES;
+metadata.dim_pca = Const.N_PROJECTION_FEATURES;
+metadata.base_path = Const.PATH_PLOT_IMAGES;
+metadata.ext = Const.EXTENSION_IMG;
 metdata.plot = true;
 
-for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
-    norm_function = FUNCTIONS_NORMALIZATION(i);
+for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
+    norm_function = Const.FUNCTIONS_NORMALIZATION(i);
     metadata.norm_function = norm_function;
     features_ = features;
 
@@ -75,8 +38,8 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
     % Minimum distance classifier
 
     data_mdc = features_; 
-    [train_data, val_data, test_data] = divide_data(features_, FRACTION_TRAINING, ...
-    FRACTION_VALIDATION, FRACTION_TESTING); % Divide the data for training, validation and testing
+    [train_data, val_data, test_data] = divide_data(features_, Const.FRACTION_TRAINING, ...
+    Const.FRACTION_VALIDATION, Const.FRACTION_TESTING); % Divide the data for training, validation and testing
 
     % TESTING  HERE ------------------------------------
     for j=(1:size(target_labels))
@@ -90,7 +53,9 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
         train_data_bin = to_bin_classification(train_data, choice_classt);
         val_data_bin = to_bin_classification(val_data, choice_classt);
     
-        %[predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "euclidean" , "Binary");
+
+        [predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "mahalanobis" , "Binary");
+
         %[predicted_train, predicted_test] = fisher_LDA(train_data_bin, val_data_bin);
         
         %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
@@ -111,16 +76,16 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
         
         % Binarize target labels: 1 for the chosen class and 0 for the
         % remaining
-        train_data_ = to_bin_classification(train_data_, choice_classt);
-        val_data_ = to_bin_classification(val_data_, choice_classt);
+        train_data_ = to_bin_classification(train_data_, choice_class);
+        val_data_ = to_bin_classification(val_data_, choice_class);
 
-        for k=(1:size(FUNCTIONS_DISTANCES, 2))
-            dist_func = FUNCTIONS_DISTANCES(k);
+        for k=(1:size(Const.FUNCTIONS_DISTANCES, 2))
+            dist_func = Const.FUNCTIONS_DISTANCES(k);
 
             % Run the Minimum Distance Classifier
-            [predicted_train, predicted_test] = min_dist_classifier(train_data_, val_data_, 'euclidean' , "Binary");
-            file_path = PATH_PLOT_IMAGES + "cm_" + genre + "_" + norm_function + "_" + dist_func + EXTENSION_IMG;
-            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_.y, predicted_test, LABELS_BINARY, file_path);
+            [predicted_train, predicted_test] = min_dist_classifier(train_data_, val_data_, dist_func , "Binary");
+            file_path = Const.PATH_PLOT_IMAGES + "cm_" + genre + "_" + norm_function + "_" + dist_func + Const.EXTENSION_IMG;
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_.y, predicted_test, Const.LABELS_BINARY, file_path);
             fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
                 "Specificity: %.3f\n" + ...
@@ -129,8 +94,8 @@ for i=(1:size(FUNCTIONS_NORMALIZATION, 2))
                 "Auc: %.3f\n", mse, accuracy, specificity, sensitivity, f_measure, auc);
             
              % store the results in a cell array
-                results_table{count, 1} = FUNCTIONS_NORMALIZATION(i);
-                results_table{count, 2} = FUNCTIONS_DISTANCES(k);
+                results_table{count, 1} = Const.FUNCTIONS_NORMALIZATION(i);
+                results_table{count, 2} = Const.FUNCTIONS_DISTANCES(k);
                 results_table{count, 3} = string(genre);
                 results_table{count, 4} = mse;
                 results_table{count, 5} = accuracy;

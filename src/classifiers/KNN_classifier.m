@@ -8,6 +8,7 @@ k_range = 25;
 n_permutations = 10;
 models = cell(n_permutations, k_range);
 err = zeros(n_permutations, k_range);
+
 for j = 1:n_permutations
     % Permute the data
     permuted_idx_trn = randperm(train_data.num_data);
@@ -45,8 +46,6 @@ ypred2_train = knnclass(train_data.X, best);
 ypred2_val = knnclass(val_data.X, best);
 err2_val=cerror(ypred2_val', val_data.y)*100;
 err2_train=cerror(ypred2_train', train_data.y)*100;
-
-
 
 
 end

@@ -46,20 +46,18 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
         genre = target_labels{j};
 
         choice_class = j - 1;
-        traindata = train_data;
-        valdata = val_data;
         train_data_bin = to_bin_classification(train_data, choice_class);
         val_data_bin = to_bin_classification(val_data, choice_class);
     
 
         %[predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "mahalanobis" , "Binary");
 
-        [predicted_train, predicted_test] = fisher_LDA(train_data_bin, val_data_bin);
+        [predicted_train, predicted_test] = fisher_LDA_classifier(train_data_bin, val_data_bin);
         
         %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
         %[predicted_train, predicted_test] = KNN_classifier(traindata, valdata);
-        %[predicted_train, predicted_test] = SVM_classifier(traindata, val_data_bin, 'S');
-        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "a");
+        %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
+        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "Binary");
 
          fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
@@ -67,7 +65,7 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
                 "Sensitivity: %.3f\n" + ...
                 "F-measure: %.3f\n"+ ...
                 "Auc: %.3f\n", mse, accuracy, specificity, sensitivity, f_measure, auc);
-          % Run the Minimum Distance Classifier            
+         % Run the Minimum Distance Classifier            
          % store the results in a cell array
             results_table{count, 1} = Const.FUNCTIONS_NORMALIZATION(i);
             results_table{count, 3} = string(genre);
@@ -79,7 +77,6 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
 
             count = count + 1;     
     end
-
 end
     
 
@@ -89,7 +86,7 @@ header = {'Normalization function', ...
 results_table = cell2table(results_table, 'VariableNames', header);
 
 % write the table to an Excel file
-writetable(results_table, 'fisher.xlsx');
+writetable(results_table, 'fisher_lda.xlsx');
 
 % End of Minimum distance classifier
 

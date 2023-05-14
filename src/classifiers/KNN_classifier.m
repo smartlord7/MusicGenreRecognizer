@@ -32,6 +32,5 @@ ypred2_val = knnclass(val_data.X, best);
 err2_val=cerror(ypred2_val', val_data.y)*100;
 err2_train=cerror(ypred2_train', train_data.y)*100;
 
-
 end
 

@@ -16,7 +16,7 @@ classdef Const
         FUNCTIONS_NORMALIZATION = ["zscore", "norm", "range"];
         FUNCTIONS_DISTANCES = ["euclidean", "cityblock", "minkowski", "chebychev", "mahalanobis"];
         LABELS_BINARY = {'Negative', 'Positive'};
-        N_PROJECTION_FEATURES = 5;
+        N_PROJECTION_FEATURES = 8;
         N_TOP_DISCRIMINANT_KW_RANKED_FEATURES = 30;
         N_TOP_DISCRIMINANT_RF_RANKED_FEATURES = 10;
         PLOT = false

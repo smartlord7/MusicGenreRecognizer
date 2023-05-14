@@ -22,7 +22,7 @@ function [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classi
         ax.YTickLabel = labels;
         title("");
         hold off;
-        save_img(plot_path);
+        save_img(plot_path + "cm.png");
     end
 
     % Compute accuracy
@@ -54,7 +54,7 @@ function [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classi
             ylabel('True Positive Rate')
             title('ROC Curve')
             grid on
-            save_img(plot_path);
+            save_img(plot_path + "_roc.png");
         end
     else
         specificity = nan(1);

@@ -63,8 +63,9 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
             sT.dim = size(train_data_partitionX, 1);
             sV.dim = size(val_data_partitionX, 1);
             %[predicted_train, predicted_test] = random_forest_classifier(sT, sV);
-            [predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
-            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY', predicted_test', Const.LABELS_BINARY, "mdc" + genre + "_" + norm_function + string(k));
+            %[predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
+            [predicted_train, predicted_test] = bayes_classifier(sT, sV, "Binary");
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY', predicted_test', Const.LABELS_BINARY, "bayes" + genre + "_" + norm_function + string(k));
     
             % Store the performance metrics for the current partition
             mse_array(k) = mse;
@@ -115,5 +116,5 @@ header = {'Normalization function', ...
 'Class', 'MSE', 'Accuracy', 'Specificity', 'Sensitivity', 'F-measure', 'AUC'};
 results_table = cell2table(results_table, 'VariableNames', header);
 % write the table to an Excel file
-writetable(results_table, 'mdc.xlsx');
+writetable(results_table, 'bayes.xlsx');
 % End of Minimum distance classifier

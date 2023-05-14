@@ -2,7 +2,7 @@ function [ypred2_train, ypred2_val] = KNN_classifier(train_data, val_data)
 %KNN_CLASSIFIER Summary of this function goes here
 
 % Choose a range of values for K
-k_range = 10;
+k_range = 25;
 
 % Repeat the procedure for several different random permutations of the data
 n_permutations = 10;
@@ -41,9 +41,10 @@ ix_min_err=find(err(:,ix)==min(err(:,ix)));
 
 best=models{ix_min_err, ix};
 %end
-ypred2_train = predict(best, train_data.X');
-ypred2_val = predict(best, val_data.X');
-err2=cerror(ypred2', val_data.y)*100;
+ypred2_train = knnclass(train_data.X, best);
+ypred2_val = knnclass(val_data.X, best);
+err2_val=cerror(ypred2_val', val_data.y)*100;
+err2_train=cerror(ypred2_train', train_data.y)*100;
 
 
 

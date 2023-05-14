@@ -32,7 +32,8 @@ y_predicted_train = bayescls(train_data.X, model);
 y_predicted_val = bayescls(val_data.X, model);
 y_predicted_train = y_predicted_train - 1; 
 y_predicted_val = y_predicted_val - 1; 
-error = cerror(y_predicted, val_data.y);
+error_val = cerror(y_predicted_val, val_data.y);
+error_train = cerror(y_predicted_train, train_data.y);
 
 end
 

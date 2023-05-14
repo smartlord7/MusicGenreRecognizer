@@ -32,28 +32,19 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
 
     for j=(1:size(target_labels))
         genre = target_labels{j};
-    
-        choice_class = j - 1;
-        data_bin = to_bin_classification(features_, choice_class);
-        [data_bin.X, data_bin.y] = oversample(data_bin.X', (data_bin.y + 1)');
-        data_bin.X = data_bin.X';
-        data_bin.y = data_bin.y' - 1;
+        
         
         % Initialize arrays to store the performance metrics for each partition
         mse_array = zeros(Const.N_PARTITIONS, 1);
         accuracy_array = zeros(Const.N_PARTITIONS, 1);
-        specificity_array = zeros(Const.N_PARTITIONS, 1);
-        sensitivity_array = zeros(Const.N_PARTITIONS, 1);
-        f_measure_array = zeros(Const.N_PARTITIONS, 1);
-        auc_array = zeros(Const.N_PARTITIONS, 1);
         
         % Classify multiple random partitions of the data
-        cv = cvpartition(data_bin.y, 'KFold', Const.N_PARTITIONS);
+        cv = cvpartition(features_.y, 'KFold', Const.N_PARTITIONS);
         for k = 1:Const.N_PARTITIONS
-            train_data_partitionX = data_bin.X(:, cv.training(k));
-            train_data_partitionY = data_bin.y(:, cv.training(k));
-            val_data_partitionX = data_bin.X(:, cv.test(k));
-            val_data_partitionY = data_bin.y(:, cv.test(k));
+            train_data_partitionX = features_.X(:, cv.training(k));
+            train_data_partitionY = features_.y(:, cv.training(k));
+            val_data_partitionX = features_.X(:, cv.test(k));
+            val_data_partitionY = features_.y(:, cv.test(k));
             sT = struct;
             sT.X = train_data_partitionX;
             sT.y = train_data_partitionY;
@@ -65,8 +56,9 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
             %[predicted_train, predicted_test] = random_forest_classifier(sT, sV);
             %[predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
             %[predicted_train, predicted_test] = fisher_LDA_classifier(sT, sV);
-            [predicted_train, predicted_test] = SVM_classifier(sT, sV, "Binary");
-            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY, predicted_test', Const.LABELS_BINARY, "svm" + genre + "_" + norm_function + string(k));
+            %[predicted_train, predicted_test] = SVM_classifier(sT, sV, "Multiclass");
+            [predicted_train, predicted_test] = bay(sT, sV, "Multiclass");
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY', predicted_test', Const.LABELS_BINARY, "svm" + genre + "_" + norm_function + string(k));
     
             % Store the performance metrics for the current partition
             mse_array(k) = mse;
@@ -117,5 +109,5 @@ header = {'Normalization function', ...
 'Class', 'MSE', 'Accuracy', 'Specificity', 'Sensitivity', 'F-measure', 'AUC'};
 results_table = cell2table(results_table, 'VariableNames', header);
 % write the table to an Excel file
-writetable(results_table, 'svm.xlsx');
+writetable(results_table, 'mdc_multi.xlsx');
 % End of Minimum distance classifier

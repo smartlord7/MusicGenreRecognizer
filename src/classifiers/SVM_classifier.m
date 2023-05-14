@@ -72,7 +72,14 @@ else % If Multi-Class
         scores_test(:, i) = score(:, 2);
     end
 
-% Determine the predicted labels by selecting the class with the
-% highest score
-[~, ypred_train] = max(scores_train, [], 2);
+    % Determine the predicted labels by selecting the class with the
+    % highest score
+
+    [~, ypred_train] = max(scores_train, [], 2);
+    ypred_train = ypred_train';
+    ypred_train = ypred_train - 1;
+
+    [~, ypred_val] = max(scores_test, [], 2);
+    ypred_val = ypred_val';
+    ypred_val = ypred_val - 1;
 end % End Multi-Class

@@ -48,7 +48,6 @@ function [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classi
         
         % Plot ROC curve
         if Const.PLOT == true
-            f = figure;
             plot(fpr, tpr)
             xlabel('False Positive Rate')
             ylabel('True Positive Rate')

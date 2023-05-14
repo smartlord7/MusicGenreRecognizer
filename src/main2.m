@@ -62,9 +62,9 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
             sV.y = val_data_partitionY;
             sT.dim = size(train_data_partitionX, 1);
             sV.dim = size(val_data_partitionX, 1);
-            %[predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
-            [predicted_train, predicted_test] = random_forest_classifier(sT, sV);
-            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY, predicted_test', Const.LABELS_BINARY, "rf" + genre + "_" + norm_function);
+            %[predicted_train, predicted_test] = random_forest_classifier(sT, sV);
+            [predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY', predicted_test', Const.LABELS_BINARY, "mdc" + genre + "_" + norm_function + string(k));
     
             % Store the performance metrics for the current partition
             mse_array(k) = mse;

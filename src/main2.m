@@ -10,6 +10,7 @@ rng(0)
 results_table = cell(size(Const.FUNCTIONS_NORMALIZATION, 2) * ...
     size(target_labels, 2), 7);
 
+
 count = 1;
 metadata = struct;
 metadata.n_top_features_kw = Const.N_TOP_DISCRIMINANT_KW_RANKED_FEATURES;
@@ -48,17 +49,23 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
         choice_class = j - 1;
         train_data_bin = to_bin_classification(train_data, choice_class);
         val_data_bin = to_bin_classification(val_data, choice_class);
+        [train_data_bin.X, train_data_bin.y] = oversample(train_data_bin.X', (train_data_bin.y + 1)');
+        train_data_bin.X = train_data_bin.X';
+        train_data_bin.y = train_data_bin.y' -1;
+        [val_data_bin.X, val_data_bin.y] = oversample(val_data_bin.X', (val_data_bin.y + 1)');
+        val_data_bin.X = val_data_bin.X';
+        val_data_bin.y = val_data_bin.y' -1;
     
 
-        %[predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "mahalanobis" , "Binary");
+        [predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "mahalanobis" , "Binary");
 
         %[predicted_train, predicted_test] = fisher_LDA_classifier(train_data_bin, val_data_bin);
         
         %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
-        [predicted_train, predicted_test] = KNN_classifier(train_data_bin, val_data_bin);
+        %[predicted_train, predicted_test] = KNN_classifier(train_data_bin, val_data_bin);
         %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
         %[predicted_train, predicted_test] = bayes_classifier(train_data_bin, val_data_bin, 'Binary');
-        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "knn" + genre + "_" + norm_function);
+        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "mdc_maha_" + genre + "_" + norm_function);
 
          fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
@@ -87,7 +94,7 @@ header = {'Normalization function', ...
 results_table = cell2table(results_table, 'VariableNames', header);
 
 % write the table to an Excel file
-writetable(results_table, 'knn.xlsx');
+writetable(results_table, 'mdc.xlsx');
 
 % End of Minimum distance classifier
 

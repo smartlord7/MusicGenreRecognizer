@@ -7,9 +7,10 @@ if (classif_type == "Binary")
     C=2.^c_pot;
     
     % Repeat the procedure for several different random permutations of the data
-    n_permutations = 10;
+    n_permutations = 1;
     models = cell(n_permutations, numel(C));
     err = zeros(n_permutations, numel(C));
+
     for n = 1:n_permutations
         % Permute the data
         permuted_idx_trn = randperm(train_data.num_data);
@@ -22,11 +23,10 @@ if (classif_type == "Binary")
         
         % Train and evaluate SVM classifiers with different values of C
         for co=1:numel(C)
-            disp(sprintf('=========\nrun=%d\nCost=%f\n===========', n,C(co)));
             disp('Train');
             model = fitcsvm(train_data.X', train_data.y', 'KernelFunction','linear', 'BoxConstraint',C(co),'Solver','SMO');
-            [ypred]= predict(model,val_data.X');
-            err(n,co)=cerror(ypred', val_data.y)*100;
+            [ypred]= predict(model,train_data.X');
+            err(n,co)=cerror(ypred', train_data.y)*100;
             models{n,co}=model;
         end
     end

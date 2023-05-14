@@ -17,12 +17,5 @@ model = fld(train_data);
 ypred_train = linclass(train_data.X, model);
 ypred_val = linclass(val_data.X, model);
 
-%figure; ppatterns(train_data); pline(model);
-% Isto foi mais pa testar imediatamente sem o ciclo
-%error = cerror(ypred, val_data.y);
-%C = confusionmat(val_data.y, ypred);
-%accuracy = sum(diag(C)) / sum(C(:));
-
-
 end
 

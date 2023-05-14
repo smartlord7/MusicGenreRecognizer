@@ -1,100 +1,119 @@
 % Clear figures and workspace variables
 close all
 clear
-
 % Make this program reproducible
 rng(0)
-
 [col_names, features, target_labels] = import_dataset(Const.PATH_FEATURES, "GTZAN");
-
 results_table = cell(size(Const.FUNCTIONS_NORMALIZATION, 2) * ...
-    size(target_labels, 2), 7);
-
-
-count = 1;
+size(target_labels, 2), 8);
 metadata = struct;
 metadata.n_top_features_kw = Const.N_TOP_DISCRIMINANT_KW_RANKED_FEATURES;
 metadata.n_top_features_rf = Const.N_TOP_DISCRIMINANT_RF_RANKED_FEATURES;
 metadata.dim_pca = Const.N_PROJECTION_FEATURES;
 metadata.base_path = Const.PATH_PLOT_IMAGES;
 metadata.ext = Const.EXTENSION_IMG;
-metdata.plot = true;
+metadata.plot = true;
+
+count = 1;
 
 for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
     norm_function = Const.FUNCTIONS_NORMALIZATION(i);
     metadata.norm_function = norm_function;
     features_ = features;
-
+    
     fprintf("Normalizing using '%s'...\n", norm_function);
     features_.X = normalize(features_.X, norm_function);
-
+    
     features_ = rank_kruskal_wallis(features_, metadata);
     
     features_ = rank_random_forest(features_, metadata);
-
-    features_ = project_pca(features_, metadata);
     
-
-    % Minimum distance classifier
-
-    data_mdc = features_; 
-    [train_data, val_data, test_data] = divide_data(features_, Const.FRACTION_TRAINING, ...
-    Const.FRACTION_VALIDATION, Const.FRACTION_TESTING); % Divide the data for training, validation and testing
+    features_ = project_pca(features_, metadata);
 
     for j=(1:size(target_labels))
-        train_data_ = train_data;
-        val_data_ = val_data;
         genre = target_labels{j};
-
-        choice_class = j - 1;
-        train_data_bin = to_bin_classification(train_data, choice_class);
-        val_data_bin = to_bin_classification(val_data, choice_class);
-        [train_data_bin.X, train_data_bin.y] = oversample(train_data_bin.X', (train_data_bin.y + 1)');
-        train_data_bin.X = train_data_bin.X';
-        train_data_bin.y = train_data_bin.y' -1;
-        [val_data_bin.X, val_data_bin.y] = oversample(val_data_bin.X', (val_data_bin.y + 1)');
-        val_data_bin.X = val_data_bin.X';
-        val_data_bin.y = val_data_bin.y' -1;
     
-
-        [predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "mahalanobis" , "Binary");
-
-        %[predicted_train, predicted_test] = fisher_LDA_classifier(train_data_bin, val_data_bin);
+        choice_class = j - 1;
+        data_bin = to_bin_classification(features_, choice_class);
+        [data_bin.X, data_bin.y] = oversample(data_bin.X', (data_bin.y + 1)');
+        data_bin.X = data_bin.X';
+        data_bin.y = data_bin.y' - 1;
         
-        %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
-        %[predicted_train, predicted_test] = KNN_classifier(train_data_bin, val_data_bin);
-        %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
-        %[predicted_train, predicted_test] = bayes_classifier(train_data_bin, val_data_bin, 'Binary');
-        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "mdc_maha_" + genre + "_" + norm_function);
-
-         fprintf("MSE: %.3f\n" + ...
-                "Accuracy: %.3f\n" + ...
-                "Specificity: %.3f\n" + ...
-                "Sensitivity: %.3f\n" + ...
-                "F-measure: %.3f\n"+ ...
-                "Auc: %.3f\n", mse, accuracy, specificity, sensitivity, f_measure, auc);
-         % Run the Minimum Distance Classifier            
+        % Initialize arrays to store the performance metrics for each partition
+        mse_array = zeros(Const.N_PARTITIONS, 1);
+        accuracy_array = zeros(Const.N_PARTITIONS, 1);
+        specificity_array = zeros(Const.N_PARTITIONS, 1);
+        sensitivity_array = zeros(Const.N_PARTITIONS, 1);
+        f_measure_array = zeros(Const.N_PARTITIONS, 1);
+        auc_array = zeros(Const.N_PARTITIONS, 1);
+        
+        % Classify multiple random partitions of the data
+        cv = cvpartition(data_bin.y, 'KFold', Const.N_PARTITIONS);
+        for k = 1:Const.N_PARTITIONS
+            train_data_partitionX = data_bin.X(:, cv.training(k));
+            train_data_partitionY = data_bin.y(:, cv.training(k));
+            val_data_partitionX = data_bin.X(:, cv.test(k));
+            val_data_partitionY = data_bin.y(:, cv.test(k));
+            sT = struct;
+            sT.X = train_data_partitionX;
+            sT.y = train_data_partitionY;
+            sV = struct;
+            sV.X = val_data_partitionX;
+            sV.y = val_data_partitionY;
+            sT.dim = size(train_data_partitionX, 1);
+            sV.dim = size(val_data_partitionX, 1);
+            %[predicted_train, predicted_test] = min_dist_classifier(sT, sV, "mahalanobis", "Binary");
+            [predicted_train, predicted_test] = random_forest_classifier(sT, sV);
+            [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_partitionY, predicted_test', Const.LABELS_BINARY, "rf" + genre + "_" + norm_function);
+    
+            % Store the performance metrics for the current partition
+            mse_array(k) = mse;
+            accuracy_array(k) = accuracy;
+            specificity_array(k) = specificity;
+            sensitivity_array(k) = sensitivity;
+            f_measure_array(k) = f_measure;
+            auc_array(k) = auc;
+        end
+    
+        % Calculate the mean and standard deviation of the performance metrics across all partitions
+        mse_mean = mean(mse_array);
+        mse_std = std(mse_array);
+        accuracy_mean = mean(accuracy_array);
+        accuracy_std = std(accuracy_array);
+        specificity_mean = mean(specificity_array);
+        specificity_std = std(specificity_array);
+        sensitivity_mean = mean(sensitivity_array);
+        sensitivity_std = std(sensitivity_array);
+        f_measure_mean = mean(f_measure_array);
+        f_measure_std = std(f_measure_array);
+        auc_mean = mean(auc_array);
+        auc_std = std(auc_array);
+    
+        fprintf("MSE: %.3f +/- %.3f\n" + ...
+                "Accuracy: %.3f +/- %.3f\n" + ...
+                "Specificity: %.3f +/- %.3f\n" + ...
+                "Sensitivity: %.3f +/- %.3f\n" + ...
+                "F-measure: %.3f +/- %.3f\n" + ...
+                "Auc: %.3f +/- %.3f\n", mse_mean, mse_std, accuracy_mean, accuracy_std, specificity_mean, specificity_std, sensitivity_mean, sensitivity_std, f_measure_mean, f_measure_std, auc_mean, auc_std);
+    
          % store the results in a cell array
             results_table{count, 1} = Const.FUNCTIONS_NORMALIZATION(i);
             results_table{count, 3} = string(genre);
-            results_table{count, 3} = mse;
-            results_table{count, 4} = accuracy;
-            results_table{count, 5} = specificity;
-            results_table{count, 6} = sensitivity;
-            results_table{count, 7} = f_measure;
+            results_table{count, 3} = mse_mean;
+            results_table{count, 4} = accuracy_mean;
+            results_table{count, 5} = specificity_mean;
+            results_table{count, 6} = sensitivity_mean;
+            results_table{count, 7} = f_measure_mean;
+            results_table{count, 8} = auc_mean;
 
             count = count + 1;     
+    
     end
 end
-    
-
 % convert the cell array to a table
 header = {'Normalization function', ...
-'Class', 'MSE', 'Accuracy', 'Specificity', 'Sensitivity', 'F-measure'};
+'Class', 'MSE', 'Accuracy', 'Specificity', 'Sensitivity', 'F-measure', 'AUC'};
 results_table = cell2table(results_table, 'VariableNames', header);
-
 % write the table to an Excel file
 writetable(results_table, 'mdc.xlsx');
-
 % End of Minimum distance classifier
-

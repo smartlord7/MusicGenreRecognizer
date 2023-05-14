@@ -3,41 +3,33 @@ function [ypred_train, ypred_val] = SVM_classifier(train_data, val_data, classif
 
 if (classif_type == "Binary")
 
-    c_pot=[-20:6];
+    c_pot=[-10:12];
     C=2.^c_pot;
+    g_pot=[-20:0];
+    G=2.^g_pot;
     
-    % Repeat the procedure for several different random permutations of the data
-    n_permutations = 1;
-    models = cell(n_permutations, numel(C));
-    err = zeros(n_permutations, numel(C));
+    
+    models = cell(numel(C), numel(G));
+    err = zeros(numel(C), numel(G));
 
-    for n = 1:n_permutations
-        % Permute the data
-        permuted_idx_trn = randperm(train_data.num_data);
-        train_data.X = train_data.X(:, permuted_idx_trn);
-        train_data.y = train_data.y(permuted_idx_trn);
-    
-        permuted_idx_tst = randperm(val_data.num_data);
-        val_data.X = val_data.X(:, permuted_idx_tst);
-        val_data.y = val_data.y(permuted_idx_tst);
         
-        % Train and evaluate SVM classifiers with different values of C
-        for co=1:numel(C)
+    % Train and evaluate SVM classifiers with different values of C
+ 
+    for co=1:numel(C)
+        for go=1:numel(G)
             disp('Train');
-            model = fitcsvm(train_data.X', train_data.y', 'KernelFunction','linear', 'BoxConstraint',C(co),'Solver','SMO');
-            [ypred]= predict(model,train_data.X');
-            err(n,co)=cerror(ypred', train_data.y)*100;
-            models{n,co}=model;
+            model = fitcsvm(train_data.X', train_data.y', 'KernelFunction','rbf', 'BoxConstraint',C(co), 'kernelScale', sqrt(1/(2*G(go))), 'Solver','SMO');
+            [ypred]= predict(model,val_data.X');
+            err(co, go)=cerror(ypred', val_data.y)*100;
+            models{co, go}=model;
         end
     end
     
-    if n_permutations > 1
-        merr=mean(err);
-        serr=std(err);
-    else
-        merr=err;
-        serr=zeros(1,numel(err));
-    end
+    
+    
+    merr=err;
+    serr=zeros(1,numel(err));
+    
     
     ix=find(merr==min(merr));
     ix=ix(1);
@@ -47,7 +39,8 @@ if (classif_type == "Binary")
     %end
     ypred_train = predict(best, train_data.X');
     ypred_val = predict(best, val_data.X');
-    %err2=cerror(ypred2', val_data.y)*100;
+    err2=cerror(ypred_val', val_data.y)*100;
+    err2=cerror(ypred2', val_data.y)*100;
 
 else % If Multi-Class
 
@@ -59,7 +52,7 @@ else % If Multi-Class
         binary_labels = double(train_data.y == i - 1);
 
         % Train SVM model
-        model = fitcsvm(train_data.X', binary_labels, 'KernelFunction','rbf', 'BoxConstraint',1);
+        model = fitcsvm(train_data.X', binary_labels, 'KernelFunction','linear', 'BoxConstraint',1);
 
         % Store model
         models{i} = model;

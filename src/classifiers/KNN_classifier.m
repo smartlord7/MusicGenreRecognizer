@@ -1,4 +1,4 @@
-function [ypred2_train, ypred2_val] = KNN_classifier(train_data, val_data)
+function [ypred_train, ypred_val] = KNN_classifier(train_data, val_data)
 %KNN_CLASSIFIER Summary of this function goes here
 
 % Choose a range of values for K
@@ -27,10 +27,8 @@ ix=ix(1);
 best = models{ix};
 
 %end
-ypred2_train = knnclass(train_data.X, best);
-ypred2_val = knnclass(val_data.X, best);
-err2_val=cerror(ypred2_val', val_data.y)*100;
-err2_train=cerror(ypred2_train', train_data.y)*100;
+ypred_train = knnclass(train_data.X, best);
+ypred_val = knnclass(val_data.X, best);
 
 end
 

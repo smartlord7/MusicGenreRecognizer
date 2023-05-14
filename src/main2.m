@@ -52,11 +52,11 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
 
         %[predicted_train, predicted_test] = min_dist_classifier(train_data_bin, val_data_bin, "mahalanobis" , "Binary");
 
-        [predicted_train, predicted_test] = fisher_LDA_classifier(train_data_bin, val_data_bin);
+        %[predicted_train, predicted_test] = fisher_LDA_classifier(train_data_bin, val_data_bin);
         
         %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
-        %[predicted_train, predicted_test] = KNN_classifier(traindata, valdata);
-        %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
+        %[predicted_train, predicted_test] = KNN_classifier(train_data_bin, val_data_bin);
+        [predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
         [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "Binary");
 
          fprintf("MSE: %.3f\n" + ...
@@ -86,7 +86,7 @@ header = {'Normalization function', ...
 results_table = cell2table(results_table, 'VariableNames', header);
 
 % write the table to an Excel file
-writetable(results_table, 'fisher_lda.xlsx');
+writetable(results_table, 'svm.xlsx');
 
 % End of Minimum distance classifier
 

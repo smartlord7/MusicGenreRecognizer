@@ -55,10 +55,10 @@ for i=(1:size(Const.FUNCTIONS_NORMALIZATION, 2))
         %[predicted_train, predicted_test] = fisher_LDA_classifier(train_data_bin, val_data_bin);
         
         %[mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, LABELS_BINARY, 'a');
-        %[predicted_train, predicted_test] = KNN_classifier(train_data_bin, val_data_bin);
+        [predicted_train, predicted_test] = KNN_classifier(train_data_bin, val_data_bin);
         %[predicted_train, predicted_test] = SVM_classifier(train_data_bin, val_data_bin, 'Binary');
-        [predicted_train, predicted_test] = bayes_classifier(train_data_bin, val_data_bin, 'Binary');
-        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "bayes_bin_" + genre + "_" + norm_function);
+        %[predicted_train, predicted_test] = bayes_classifier(train_data_bin, val_data_bin, 'Binary');
+        [mse, accuracy, specificity, sensitivity, f_measure, auc] = eval_classifier(val_data_bin.y, predicted_test, Const.LABELS_BINARY, "knn" + genre + "_" + norm_function);
 
          fprintf("MSE: %.3f\n" + ...
                 "Accuracy: %.3f\n" + ...
@@ -87,7 +87,7 @@ header = {'Normalization function', ...
 results_table = cell2table(results_table, 'VariableNames', header);
 
 % write the table to an Excel file
-writetable(results_table, 'bayes.xlsx');
+writetable(results_table, 'knn.xlsx');
 
 % End of Minimum distance classifier
 
